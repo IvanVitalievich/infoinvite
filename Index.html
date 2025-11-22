@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ЛУКАШЕВ x ЩЕРБАНЬ // ПАРНАЯ ВЗРЫВ</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body,html{height:100%;overflow:hidden;background:#000;color:#0f0;font-family:'Courier New',monospace;}
+        canvas{position:fixed;top:0;left:0;z-index:1;}
+        
+        .wrapper{
+            position:absolute;inset:0;z-index:10;
+            display:flex;flex-direction:column;justify-content:space-between;align-items:center;
+            padding:5vh 5vw;pointer-events:none;
+        }
+        .top{font-size:clamp(1.5rem,5vw,4rem);text-shadow:0 0 30px #0f0;}
+        .countdown{font-size:clamp(3rem,10vw,9rem);letter-spacing:0.6vw;text-shadow:0 0 60px #0f0;animation:g 3s infinite;}
+        .btn{
+            pointer-events:all;padding:clamp(20px,6vw,60px) clamp(50px,15vw,150px);
+            font-size:clamp(2.5rem,8vw,7rem);background:transparent;color:#0f0;
+            border:6px solid #0f0;cursor:pointer;text-transform:uppercase;
+            letter-spacing:0.8vw;box-shadow:0 0 80px #0f0;transition:all .4s;
+        }
+        .btn:hover{transform:scale(1.2);background:#0f0;color:#000;box-shadow:0 0 160px #0f0;}
+        .bottom{font-size:clamp(1.8rem,5vw,4rem);text-shadow:0 0 40px #0f0;}
+
+        /* ГРАНАТА — СТАРТУЕТ СПРАВА ЗА ЭКРАНОМ */
+        #grenade{
+            position:fixed;
+            top:50%;
+            right:-250px;                     /* за экраном справа */
+            width:180px;
+            height:180px;
+            background:url('gr.png') center/contain no-repeat;  /* ← ТВОЯ ГРАНАТА ЗДЕСЬ */
+            /* или прямая ссылка: url('https://твоя-ссылка/граната.png') */
+            filter:drop-shadow(0 0 60px #0f0);
+            opacity:0;
+            pointer-events:none;
+            z-index:999;
+            transform:translateY(-50%);
+            transition:all 1s cubic-bezier(0.2,0.8,0.2,1);
+        }
+
+        #flash{
+            position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:998;
+            transition:opacity 0.15s;
+        }
+
+        @keyframes g{
+            0%,100%{text-shadow:0 0 60px #0f0;}
+            4%{text-shadow:15px 0 #f00,-15px 0 #0ff;}
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+
+<div class="wrapper">
+    <div class="top">ЛУКАШЕВ ИВАН & ДМИТРИЙ ЩЕРБАНЬ<br>ПРИГЛАШАЮТ НА ПАРНУЮ ПО ИНФОРМАТИКЕ</div>
+    <div class="countdown" id="countdown">00д 00ч 00м 00с</div>
+    <button class="btn" id="enterBtn">ВОРВАТЬСЯ В ПАРНУЮ</button>
+    <div class="bottom">ОДИН КЛИК ДЛЯ ПЕРЕХОДА</div>
+</div>
+
+<div id="grenade"></div>
+<div id="flash"></div>
+
+<audio id="boom" preload="auto">
+    <source src="flashbang-1_5-1.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+// === МЕНЯЙ ЗДЕСЬ ===
+const TARGET_DATE = new Date('2025-12-31T23:59:59').getTime();
+const MEET_LINK = 'https://meet.google.com/твоя-ссылка';
+// ===================
+
+const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+let w = c.width = innerWidth;
+let h = c.height = innerHeight;
+const chars = '01АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ';
+let drops = [];
+
+function initMatrix() {
+    drops = [];
+    const cols = Math.floor(w / 20) + 1;
+    for(let i = 0; i < cols; i++) drops[i] = 1;
+}
+function drawMatrix() {
+    ctx.fillStyle = 'rgba(0,0,0,0.05)';
+    ctx.fillRect(0,0,w,h);
+    ctx.fillStyle = '#0f0';
+    ctx.font = '18px monospace';
+    for(let i = 0; i < drops.length; i++) {
+        const char = chars[Math.floor(Math.random()*chars.length)];
+        ctx.fillText(char, i*20, drops[i]*20);
+        if(drops[i]*20 > h && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+    }
+}
+setInterval(drawMatrix, 35);
+initMatrix();
+
+// отсчёт
+function updateCountdown() {
+    const diff = TARGET_DATE - Date.now();
+    if (diff <= 0) {
+        document.getElementById('countdown').innerHTML = 'ПИЗДЕЦ<br>УЖЕ';
+        return;
+    }
+    const d = Math.floor(diff / 86400000);
+    const h = String(Math.floor(diff % 86400000 / 3600000)).padStart(2,'0');
+    const m = String(Math.floor(diff % 3600000 / 60000)).padStart(2,'0');
+    const s = String(Math.floor(diff % 60000 / 1000)).padStart(2,'0');
+    document.getElementById('countdown').innerHTML = `${d}д ${h}ч ${m}м ${s}с`;
+}
+setInterval(updateCountdown, 500);
+updateCountdown();
+
+// ВЗРЫВ — ГРАНАТА ЛЕТИТ СПРАВА В ЦЕНТР + ДОЛГАЯ ВСПЫШКА
+document.getElementById('enterBtn').addEventListener('click', () => {
+    const grenade = document.getElementById('grenade');
+    const flash = document.getElementById('flash');
+    const boom = document.getElementById('boom');
+
+    // показываем гранату справа
+    grenade.style.opacity = '1';
+    grenade.style.right = '-250px';
+
+    // летит в центр
+    requestAnimationFrame(() => {
+        grenade.style.right = '50%';
+        grenade.style.transform = 'translateY(-50%) translateX(50%) scale(3)';
+    });
+
+    // через 1 секунду — взрыв
+    setTimeout(() => {
+        boom.currentTime = 0;
+        boom.volume = 1.0;
+        boom.play();
+
+        flash.style.opacity = '1';        // включаем белый экран
+        grenade.style.opacity = '0';
+
+        // вспышка держится 2 секунды
+        setTimeout(() => {
+            flash.style.opacity = '0';
+        }, 5000);
+
+        // через 2.2 сек — в мит
+        setTimeout(() => {
+            window.open(MEET_LINK, '_blank');
+        }, 2200);
+    }, 1000);
+});
+
+window.addEventListener('resize', () => {
+    w = c.width = innerWidth;
+    h = c.height = innerHeight;
+    initMatrix();
+});
+</script>
+</body>
+</html>
